@@ -8,75 +8,104 @@
 #define BUFF_SIZE 1024
 #define TOKEN_SIZE 128
 
+int pos;
 struct node{
 	int position;
-	char data[1000];
-	 pointer_addr;
+	int *pointer;
 	int size;
 	struct node *next;
 };
 
 struct Queue{
-	struct node *start, *end;
+	struct node *front, *rear;
 };
 
 struct Queue * free_list;
 
-int help(char **args){
+int help(){
   printf("Enter malloc <size> or free <allocation request number> or print or exit.\n");
   return 1;
 }
 
-struct node * create_node(char *line){
+struct node * create_node( int position, int size){
 	struct node *temp = (struct node *) malloc(sizeof( struct node ));
-	strcpy(temp -> data,line);
+	temp -> position = position;
+	temp -> size = size;
 	temp -> next = NULL;
 	return temp;
 }
 
 struct Queue * initialize_queue(){
 	struct Queue *q = (struct Queue*) malloc(sizeof(struct Queue));
-	q -> start = q -> end = NULL;
+	q -> front = q -> rear = NULL;
 	return q;
 }
 
-void enqueue(struct Queue * q,char *line){
-	struct node *temp = create_node(line);
-	if(q -> start == NULL){
-		q -> start = q -> end = temp;
+void enqueue(struct Queue * q,int position, int size){
+	struct node *temp = create_node( position, size);
+	if(q -> front == NULL){
+		q -> front = q -> rear = temp;
 	}
 	else{
-		q -> end -> next = temp;
-		q -> end = temp;
+		q -> rear -> next = temp;
+		q -> rear = temp;
 	}
 }
 
-struct Queue * dequeue( struct Queue *q, char *line){
-	if (q -> start == NULL){
+struct node * dequeue( struct Queue *q){
+	if (q -> front == NULL){
 		return NULL;
 	}
 	else{
-		struct node *temp = q -> start;
-		q -> start = q -> start -> next;
-		if( q -> start == NULL){
-			q -> end = NULL;
+		struct node *temp = q -> front;
+		q -> front = q -> front -> next;
+		if( q -> front == NULL){
+			q -> rear = NULL;
 		}
 		return temp;
 	}
 }
 
+struct node * del_kth_entry( struct Queue *q, int k){
+	struct node *temp = q -> front;
+	int count = 1;
+	if( k == 1){
+		return dequeue( q);
+	}
+	else{
+		while( count < k-1 && temp != NULL ){
+			count++;
+			temp = temp -> next;
+		}
+		if( temp == NULL || temp -> next == NULL){
+			return NULL;
+		}
+		else {
+			struct node *temp1 = temp -> next;
+			temp -> next = temp1 -> next;
+			temp1 -> next = NULL;
+			if (temp -> next == NULL){
+				q -> rear = temp;
+			}
+			return temp1;
+		}
+	}
+}
+
 void print_queue(struct Queue * q){
 	struct node *temp = (struct node *)malloc(sizeof(struct node));
-	temp = q -> start;
-	while(temp -> next != NULL){
-		printf("%s\n",temp -> data );
+	temp = q -> front;
+	while(temp != NULL){
+		printf("| position = %d, size = %d, pointer addr = %p | --> ",temp -> position, temp -> size, &(temp -> pointer) );
 		temp = temp -> next;
 	}
+	printf("%s","NULL" );
+	free(temp);
 }
 
 char** split_line (char * line, int *argc){
 	int token_buffer_size = TOKEN_SIZE;
-	char **tokens = malloc( token_buffer_size * sizeof(char *));
+	char **tokens = (char **)malloc( token_buffer_size * sizeof(char *));
 	char *token;
 
 	if( !tokens){
@@ -93,7 +122,7 @@ char** split_line (char * line, int *argc){
 
 			if(pos > token_buffer_size){
 				token_buffer_size += TOKEN_SIZE;
-				tokens = realloc(tokens, token_buffer_size);
+				tokens = (char **)realloc(tokens, token_buffer_size);
 				if(!tokens){
 					fprintf(stderr, "allocation error\n");
 					exit(0);
@@ -120,17 +149,60 @@ int execute(char **args){
 	if(args[0] == NULL){
 		return 1;
 	}
-	if( strcmp(args[0],"malloc") == 0){
-		
+	else if( strcmp(args[0],"help") == 0){
+		help();
+	}
+	else if( strcmp(args[0],"malloc") == 0){
+		if( args[1] != NULL){
+			printf("malloc request\n");
+			int val = atoi(args[1]);
+			pos += 1;
+			enqueue( free_list, pos, val);
+			free_list -> rear -> pointer = (int * )malloc(val);
+			//add an entry to the list and then malloc using the int ptr in the node
+		}
+		else{
+			fprintf(stderr, "%s\n","Illegal malloc request : specify size to malloc!" );
+		}
+		return 1;
 	}
 	else if( strcmp(args[0],"free") == 0){
+		if( args[1] != NULL){
+			printf("free request\n");
+			int val = atoi(args[1]);
+			if( val > pos){
+				fprintf(stderr, "%s\n","Illegal free request" );
+			}
+			else{
+				struct node *temp = del_kth_entry(free_list, val);
+				if ( temp != NULL){
+					free(temp -> pointer);
+					free( temp);
+					printf("successfull\n");
+				}
+				else{
+					fprintf(stderr, "%s\n","Illegal free request" );
 
+				}
+			}
+		}
+		else{
+			fprintf(stderr, "%s\n","Illegal free request : specify the pointer to free!" );
+		}
+		return 1;
 	}
 	else if( strcmp(args[0],"print") == 0){
+			printf("print request\n");
+			print_queue(free_list);
+			printf("\n");
+			return 1;
 
 	}
 	else if( strcmp(args[0],"exit") == 0){
-		return 1;
+		return 0;
+	}
+	else{
+		printf("%s\n","Not a valid command! Type help for more info!!" );
 	}
 }
 
@@ -160,6 +232,8 @@ void interface(){
 }
 
 int main(int argc, char const *argv[]){
+	free_list = initialize_queue();
+	pos = 0;
 	interface();
 	return 0;
 }
