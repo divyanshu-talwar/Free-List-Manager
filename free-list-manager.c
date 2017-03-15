@@ -68,20 +68,22 @@ struct node * dequeue( struct Queue *q){
 
 struct node * del_kth_entry( struct Queue *q, int k){
 	struct node *temp = q -> front;
-	int count = 1;
-	if( k == 1){
+	if( q-> front == NULL){
+		return NULL;
+	}
+	if( q -> front -> position == k){
 		return dequeue( q);
 	}
-	else{
-		while( count < k-1 && temp != NULL ){
-			count++;
+	if( q -> front -> next != NULL){
+		struct node *temp1 = q -> front -> next;		
+		while( temp != NULL && temp1 != NULL && temp1 -> position != k){
 			temp = temp -> next;
+			temp1 = temp1 -> next;
 		}
-		if( temp == NULL || temp -> next == NULL){
+		if( temp == NULL || temp1 == NULL){
 			return NULL;
 		}
 		else {
-			struct node *temp1 = temp -> next;
 			temp -> next = temp1 -> next;
 			temp1 -> next = NULL;
 			if (temp -> next == NULL){
