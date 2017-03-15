@@ -1,14 +1,12 @@
 # Free-List-Manager
-Tasks:
+## About
+* This is a basic implemetation of a free list manager which keeps track of malloc() and free() function calls.
+* Contributor - Divyanshu Talwar
 
-1. To implement a free list manager which keeps track of calls of malloc() and free().
+#### Basic Functionalities
+* A malloc X call results in a malloc() call for X Bytes and enqueues this pointer into the `free_list`.
+* A free X call results in freeing the Xth pointer, which was allocated by the Xth malloc() call. This call also dequeues the freed pointer from the `free_list`.
+* A print call prints the current status of the `free_list`. The current status represents the malloced pointer address still in the memory (i.e. not freed until now), its size and position at which this malloc call was executed.
 
-2. The user interface should allow to issue a malloc() call for x bytes.
-e.g $:> malloc 10 would result in a malloc call for 10 bytes.
-
-3. The user interface should allow to issue a free call for any past malloc() call by index
-e.g $:> free 2 will result in the free operation for the 2nd malloc call
-
-4. The user interface should allow to print the free list
-e.g.: $:> print will result in printing the past malloc calls (which are still allocated) in the order with size and pointer address information
-Marks: 5
+## Installation and Execution
+* Run `make` command on the console and the Makefile would run the shell.
