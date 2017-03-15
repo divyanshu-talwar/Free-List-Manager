@@ -178,7 +178,7 @@ int execute(char **args){
 				if ( temp != NULL){
 					free(temp -> pointer);
 					free( temp);
-					printf("successfull\n");
+					printf("successful\n");
 				}
 				else{
 					fprintf(stderr, "%s\n","Illegal free request" );
